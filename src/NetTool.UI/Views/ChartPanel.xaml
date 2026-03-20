@@ -1,0 +1,37 @@
+<UserControl x:Class="NetTool.UI.Views.ChartPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- RPS Chart -->
+        <Border Grid.Row="0" Style="{StaticResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📈 REQUESTS PER SECOND" />
+                <lvc:CartesianChart x:Name="RpsChart"
+                                    Series="{Binding RpsSeries}"
+                                    AnimationsSpeed="00:00:00.200"
+                                    ZoomMode="X"
+                                    TooltipPosition="Top" />
+            </DockPanel>
+        </Border>
+
+        <!-- Latency Chart -->
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="⏱ LATENCY (MS)" />
+                <lvc:CartesianChart x:Name="LatencyChart"
+                                    Series="{Binding LatencySeries}"
+                                    AnimationsSpeed="00:00:00.200"
+                                    ZoomMode="X"
+                                    TooltipPosition="Top" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

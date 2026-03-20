@@ -1,0 +1,126 @@
+<UserControl x:Class="NetTool.UI.Views.ConfigPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0">
+
+            <!-- Request Section -->
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="⚡ REQUEST" />
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="URL" />
+                    <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
+                             IsEnabled="{Binding IsNotRunning}" />
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="METHOD" />
+                    <ComboBox ItemsSource="{Binding HttpMethods}"
+                              SelectedItem="{Binding Method}"
+                              IsEnabled="{Binding IsNotRunning}" />
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="HEADERS (JSON)" />
+                    <TextBox Text="{Binding Headers, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True" TextWrapping="Wrap"
+                             MinHeight="50" MaxHeight="100"
+                             IsEnabled="{Binding IsNotRunning}" />
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="BODY" />
+                    <TextBox Text="{Binding Body, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True" TextWrapping="Wrap"
+                             MinHeight="50" MaxHeight="120"
+                             IsEnabled="{Binding IsNotRunning}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Load Section -->
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="🔧 LOAD CONFIG" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="CONCURRENCY" />
+                            <TextBox Text="{Binding Concurrency, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsNotRunning}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0" Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="DURATION (SEC)" />
+                            <TextBox Text="{Binding DurationSec, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsNotRunning}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="RAMP-UP (SEC)" />
+                            <TextBox Text="{Binding RampUpSec, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsNotRunning}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="TIMEOUT (MS)" />
+                            <TextBox Text="{Binding TimeoutMs, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsNotRunning}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Controls -->
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Style="{StaticResource StartButton}"
+                                Content="▶  START"
+                                Command="{Binding StartCommand}" />
+
+                        <Button Grid.Column="2"
+                                Style="{StaticResource StopButton}"
+                                Content="■  STOP"
+                                Command="{Binding StopCommand}" />
+                    </Grid>
+
+                    <!-- Stats -->
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="TOTAL REQUESTS" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding TotalRequests}" FontSize="20" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="ERRORS" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding TotalErrors}" FontSize="20" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

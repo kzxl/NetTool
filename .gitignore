@@ -1,0 +1,14 @@
+# Build outputs
+bin/
+obj/
+engine.exe
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# Temp
+*.tmp
+nettool_config_*.json
