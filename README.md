@@ -25,7 +25,8 @@
 │                 │ ◄────────────────── │                  │
 │  • Config Panel │   stdout JSON line  │  • Worker Pool   │
 │  • Chart Panel  │                     │  • HTTP Client   │
-│  • Log Panel    │                     │  • Metrics Agg   │
+│  • Summary Panel│                     │  • Metrics Agg   │
+│  • Log Panel    │                     │  • Resp Validate │
 └─────────────────┘                     └──────────────────┘
 ```
 
@@ -66,14 +67,34 @@ dotnet run --project src/NetTool.UI
 
 1. Nhập **URL**, chọn **Method**, cấu hình **Headers/Body** nếu cần
 2. Đặt **Concurrency**, **Duration**, **Ramp-up**, **Timeout**
-3. Bấm **▶ START** → theo dõi realtime chart và log
-4. Bấm **■ STOP** để dừng giữa chừng
+3. (Tuỳ chọn) Đặt **Expected Status** để validate response
+4. (Tuỳ chọn) Đặt **Alert Threshold** p95/p99
+5. Bấm **▶ START** → theo dõi realtime chart và log
+6. Khi test xong → **Summary Panel** hiện tổng kết
+7. Bấm **Export CSV/JSON** để xuất kết quả
 
 ### Test Engine độc lập (không cần UI)
 
 ```bash
 ./engine.exe sample_config.json
 ```
+
+---
+
+## ✨ Tính năng
+
+### Core
+- 🎯 **Realtime Charts** — RPS + Latency (Avg/p95/p99) LiveCharts2
+- 📈 **Detailed Metrics** — Min/Max/StdDev/p50/p95/p99, Status Code distribution, Bytes, Active Connections
+- 🔄 **Ramp-up** — Tăng dần concurrency trong thời gian cấu hình
+- 🛑 **Graceful Shutdown** — Stop giữa chừng không mất data
+
+### Phase 2 — Enhanced UI
+- 📊 **Export CSV/JSON** — Xuất toàn bộ metrics history ra file
+- 📂 **Request Templates** — Save/Load cấu hình test thường dùng (`%AppData%/NetTool/templates/`)
+- 🔔 **Alert Thresholds** — Cảnh báo visual khi p95/p99 vượt ngưỡng (ms)
+- 📋 **Summary Panel** — Tổng kết overall metrics (3×3 grid) khi test kết thúc
+- ✅ **Response Validation** — Kiểm tra expected HTTP status code
 
 ---
 
@@ -90,32 +111,22 @@ Mỗi giây, engine xuất 1 JSON line chứa:
 | **Std Dev** | `stddev` | Độ lệch chuẩn response time |
 | **p50** | `p50` | Median (50th percentile) |
 | **p95** | `p95` | 95% request nhanh hơn giá trị này |
-| **p99** | `p99` | 99th percentile (worst case gần max) |
-| **Error Rate** | `err` | Tỷ lệ lỗi (0.0 = 0%, 1.0 = 100%) |
+| **p99** | `p99` | 99th percentile |
+| **Error Rate** | `err` | Tỷ lệ lỗi (0.0 – 1.0) |
 | **Status Codes** | `codes` | Phân bổ 2xx / 3xx / 4xx / 5xx |
-| **Bytes Received** | `bytes` | Tổng bytes nhận được trong 1s |
+| **Bytes Received** | `bytes` | Tổng bytes nhận trong 1s |
 | **Active Conns** | `conns` | Số connection đang active |
 
 ### Ví dụ output
 
 ```json
 {
-  "t": 5,
-  "rps": 120,
-  "avg": 245.3,
-  "min": 98,
-  "max": 1205,
-  "stddev": 156.2,
-  "p50": 210,
-  "p95": 450,
-  "p99": 890,
-  "err": 0.008,
-  "total": 120,
-  "success": 119,
-  "fail": 1,
+  "t": 5, "rps": 120,
+  "avg": 245.3, "min": 98, "max": 1205, "stddev": 156.2,
+  "p50": 210, "p95": 450, "p99": 890,
+  "err": 0.008, "total": 120, "success": 119, "fail": 1,
   "codes": { "2xx": 119, "3xx": 0, "4xx": 1, "5xx": 0 },
-  "bytes": 245760,
-  "conns": 10
+  "bytes": 245760, "conns": 10
 }
 ```
 
@@ -132,7 +143,8 @@ Mỗi giây, engine xuất 1 JSON line chứa:
       "Authorization": "Bearer your-token",
       "Content-Type": "application/json"
     },
-    "body": "{\"key\": \"value\"}"
+    "body": "{\"key\": \"value\"}",
+    "expectedStatus": 200
   },
   "load": {
     "concurrency": 100,
@@ -149,6 +161,7 @@ Mỗi giây, engine xuất 1 JSON line chứa:
 | `request.method` | HTTP method | `GET` |
 | `request.headers` | Custom headers | `{}` |
 | `request.body` | Request body | `""` |
+| `request.expectedStatus` | Expected status code (0 = any 2xx-3xx) | `0` |
 | `load.concurrency` | Số worker đồng thời | `10` |
 | `load.durationSec` | Thời gian test (giây) | `30` |
 | `load.rampUpSec` | Thời gian ramp-up | `5` |
@@ -160,22 +173,22 @@ Mỗi giây, engine xuất 1 JSON line chứa:
 
 ```
 NetTool/
-├── engine/                     # Go Engine
-│   ├── main.go                 # Entry point, orchestration
-│   ├── config/config.go        # Config loader & validation
-│   ├── worker/pool.go          # Semaphore-based worker pool + ramp-up
-│   ├── metrics/collector.go    # Metrics aggregation (1s window)
-│   └── reporter/reporter.go    # JSON stdout reporter
+├── engine/                         # Go Engine
+│   ├── main.go                     # Entry point
+│   ├── config/config.go            # Config loader + ExpectedStatus
+│   ├── worker/pool.go              # Worker pool + response validation
+│   ├── metrics/collector.go        # Metrics aggregation
+│   └── reporter/reporter.go        # JSON stdout reporter
 │
-├── src/NetTool.UI/             # WPF Application
-│   ├── Models/                 # TestConfig, MetricsData
-│   ├── ViewModels/             # MVVM (MainViewModel, RelayCommand)
-│   ├── Services/               # EngineRunner, MetricsParser
-│   ├── Views/                  # ConfigPanel, ChartPanel, LogPanel
-│   └── Themes/Styles.xaml      # Dark theme
+├── src/NetTool.UI/                 # WPF Application
+│   ├── Converters/                 # BoolToVisibilityConverter
+│   ├── Models/                     # TestConfig, MetricsData, StatusCodeDist
+│   ├── ViewModels/                 # MainViewModel, RelayCommand, ViewModelBase
+│   ├── Services/                   # EngineRunner, MetricsParser, ExportService, TemplateService
+│   ├── Views/                      # ConfigPanel, ChartPanel, SummaryPanel, LogPanel
+│   └── Themes/Styles.xaml          # Dark theme + custom ComboBox
 │
-├── engine.exe                  # Built engine binary (gitignored)
-├── sample_config.json          # Sample config cho testing
+├── sample_config.json
 └── README.md
 ```
 
@@ -189,75 +202,77 @@ NetTool/
 | Normal | 50 | 30s | Test performance baseline |
 | Stress | 100 | 60s | Kiểm tra stability |
 | Extreme | 500+ | 60s | Tìm breaking point |
+| Validation | 10 | 10s | Set expected status, verify error rate |
 
 ---
 
 ## 🔧 Thiết kế kỹ thuật
 
 ### Go Engine
-
-- **Worker Pool**: Semaphore pattern (`chan struct{}`) giới hạn goroutine, tránh spawn vô hạn
-- **HTTP Client**: 1 client duy nhất cho tất cả workers, connection pooling, keep-alive
-- **Ramp-up**: Tăng dần concurrency trong `rampUpSec`, tránh spike đột ngột
-- **Memory**: Reset metrics slice mỗi 1s flush, không append vô hạn
-- **Graceful Shutdown**: Context cancellation + SIGINT/SIGTERM handling
+- **Worker Pool**: Semaphore (`chan struct{}`) giới hạn goroutine
+- **HTTP Client**: 1 client, connection pooling, keep-alive
+- **Ramp-up**: Tăng dần concurrency trong `rampUpSec`
+- **Response Validation**: So khớp `expectedStatus` nếu > 0
+- **Memory**: Reset metrics slice mỗi 1s, không append vô hạn
+- **Graceful Shutdown**: Context cancellation + SIGINT/SIGTERM
 
 ### WPF UI
-
-- **MVVM**: ViewModelBase + RelayCommand, data binding 2 chiều
-- **Thread Safety**: `Dispatcher.BeginInvoke` cho tất cả UI updates từ engine events
-- **Charting**: LiveCharts2 (SkiaSharp) — RPS chart + Latency chart (Avg/p95/p99)
-- **Log**: Virtualized ListBox, capped 500 lines, auto-scroll
-- **Dark Theme**: Custom styled controls (TextBox, ComboBox, Button, ListBox)
+- **MVVM**: ViewModelBase + RelayCommand
+- **Thread Safety**: `Dispatcher.BeginInvoke` cho UI updates
+- **Charting**: LiveCharts2 (SkiaSharp) — RPS + Latency
+- **Summary**: Compute overall metrics từ `_metricsHistory`
+- **Export**: CSV (full table) / JSON (array)
+- **Templates**: Save/Load tại `%AppData%/NetTool/templates/`
+- **Dark Theme**: Custom styled controls + ComboBox template
 
 ---
 
-## 🗺️ Roadmap — Tính năng phát triển
+## 🗺️ Roadmap
 
-### 🔜 Phase 2 — Enhanced UI
-- [ ] **Export CSV/JSON** — xuất kết quả test ra file để phân tích
-- [ ] **Test History** — lưu lại các lần test, so sánh kết quả
-- [ ] **Compare Mode** — overlay chart 2 lần test để thấy regression
-- [ ] **Alert Threshold** — cảnh báo khi p95/p99 vượt ngưỡng đặt trước
-- [ ] **Request Templates** — lưu/load preset config thường dùng
-- [ ] **Response Validation** — check body/status code response có đúng không
+### ✅ Phase 1 — Core (Done)
+- [x] Go Engine (worker pool, metrics, reporter)
+- [x] WPF UI (config, chart, log, dark theme)
+- [x] Realtime metrics streaming
+
+### ✅ Phase 2 — Enhanced UI (Done)
+- [x] Export CSV/JSON
+- [x] Request Templates (save/load)
+- [x] Alert Thresholds (p95/p99)
+- [x] Summary Panel
+- [x] Response Validation
 
 ### 🔮 Phase 3 — Advanced Engine
-- [ ] **HTTP/2 Support** — test API hỗ trợ HTTP/2
-- [ ] **WebSocket Testing** — test WebSocket connections
-- [ ] **Custom Scripts** — viết script test phức tạp (giống k6)
-- [ ] **Variable Injection** — `{{random_id}}`, `{{timestamp}}` trong URL/body
-- [ ] **Multi-endpoint** — test nhiều endpoint cùng lúc theo scenario
-- [ ] **Rate Limiting** — giới hạn RPS thay vì chỉ concurrency
-- [ ] **Certificate Pinning** — hỗ trợ mTLS / custom certificates
+- [ ] HTTP/2 Support
+- [ ] WebSocket Testing
+- [ ] Custom Scripts (giống k6)
+- [ ] Variable Injection (`{{random_id}}`, `{{timestamp}}`)
+- [ ] Multi-endpoint scenario testing
+- [ ] Rate Limiting (giới hạn RPS)
+- [ ] Certificate Pinning (mTLS)
 
 ### 🚀 Phase 4 — Distributed & Integration
-- [ ] **gRPC Control API** — điều khiển engine qua API thay vì process
-- [ ] **WebSocket Realtime** — stream metrics qua WebSocket
-- [ ] **Distributed Mode** — nhiều engine node chạy song song
-- [ ] **CI/CD Integration** — CLI mode với exit code dựa trên threshold
-- [ ] **Docker Support** — containerize engine để chạy trên cloud
-- [ ] **Grafana Dashboard** — export metrics sang Prometheus/Grafana
+- [ ] gRPC Control API
+- [ ] WebSocket realtime streaming
+- [ ] Distributed Mode (multi-node)
+- [ ] CI/CD Integration (CLI with exit code)
+- [ ] Docker Support
+- [ ] Grafana Dashboard (Prometheus export)
 
 ### 💡 Ý tưởng mở rộng
-- [ ] **DNS Metrics** — tách riêng DNS lookup time
-- [ ] **TLS Handshake** — measure TLS negotiation time  
-- [ ] **Connection Reuse Rate** — % connection được reuse
-- [ ] **Bandwidth Throttle** — simulate slow network
-- [ ] **Geographic Distribution** — test từ nhiều region
-- [ ] **AI Analysis** — tự động phân tích bottleneck từ metrics
+- [ ] DNS / TLS Handshake metrics
+- [ ] Connection Reuse Rate
+- [ ] Bandwidth Throttle (simulate slow network)
+- [ ] AI-powered bottleneck analysis
 
 ---
 
-## ⚠️ Lưu ý quan trọng
+## ⚠️ Lưu ý
 
-> **⚠️ Tool này chỉ được sử dụng cho mục đích test hợp pháp:**
-> - Test API của chính bạn hoặc có quyền test
-> - Test trong môi trường staging/development
-> - **KHÔNG** dùng để tấn công (DDoS) hệ thống bên ngoài
+> **Tool này chỉ dùng cho mục đích test hợp pháp.**
+> Không dùng để tấn công (DDoS) hệ thống bên ngoài.
 
 ---
 
 ## 📄 License
 
-MIT License — Xem [LICENSE](LICENSE) file.
+MIT License
