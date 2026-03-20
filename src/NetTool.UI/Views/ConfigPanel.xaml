@@ -5,6 +5,29 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="0">
 
+            <!-- Template Buttons -->
+            <Border Style="{StaticResource CardBorder}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0"
+                            Style="{StaticResource ButtonBase}"
+                            Background="#37474F" Foreground="White"
+                            Content="📂  LOAD TEMPLATE"
+                            Command="{Binding LoadTemplateCommand}" />
+
+                    <Button Grid.Column="2"
+                            Style="{StaticResource ButtonBase}"
+                            Background="#37474F" Foreground="White"
+                            Content="💾  SAVE TEMPLATE"
+                            Command="{Binding SaveTemplateCommand}" />
+                </Grid>
+            </Border>
+
             <!-- Request Section -->
             <Border Style="{StaticResource CardBorder}">
                 <StackPanel>
@@ -14,10 +37,27 @@
                     <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding IsNotRunning}" />
 
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="METHOD" />
-                    <ComboBox ItemsSource="{Binding HttpMethods}"
-                              SelectedItem="{Binding Method}"
-                              IsEnabled="{Binding IsNotRunning}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="80" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="METHOD" />
+                            <ComboBox ItemsSource="{Binding HttpMethods}"
+                                      SelectedItem="{Binding Method}"
+                                      IsEnabled="{Binding IsNotRunning}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="STATUS" />
+                            <TextBox Text="{Binding ExpectedStatus, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsNotRunning}"
+                                     ToolTip="Expected HTTP status (0 = any 2xx-3xx)" />
+                        </StackPanel>
+                    </Grid>
 
                     <TextBlock Style="{StaticResource FieldLabel}" Text="HEADERS (JSON)" />
                     <TextBox Text="{Binding Headers, UpdateSourceTrigger=PropertyChanged}"
@@ -45,8 +85,6 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
                             <RowDefinition />
                             <RowDefinition />
                         </Grid.RowDefinitions>
@@ -78,6 +116,41 @@
                 </StackPanel>
             </Border>
 
+            <!-- Alert Thresholds -->
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="🔔 ALERT THRESHOLDS" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="P95 (MS)" />
+                            <TextBox Text="{Binding P95Threshold, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsNotRunning}"
+                                     ToolTip="Alert when p95 exceeds this (0 = off)" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="P99 (MS)" />
+                            <TextBox Text="{Binding P99Threshold, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsNotRunning}"
+                                     ToolTip="Alert when p99 exceeds this (0 = off)" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Alert Display -->
+                    <TextBlock Text="{Binding AlertMessage}"
+                               Foreground="{StaticResource AccentOrangeBrush}"
+                               FontWeight="Bold" FontSize="12"
+                               Margin="0,6,0,0" TextWrapping="Wrap"
+                               Visibility="{Binding IsAlerted, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+            </Border>
+
             <!-- Controls -->
             <Border Style="{StaticResource CardBorder}">
                 <StackPanel>
@@ -97,6 +170,27 @@
                                 Style="{StaticResource StopButton}"
                                 Content="■  STOP"
                                 Command="{Binding StopCommand}" />
+                    </Grid>
+
+                    <!-- Export -->
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Style="{StaticResource ButtonBase}"
+                                Background="#455A64" Foreground="White"
+                                Content="📊 EXPORT CSV"
+                                Command="{Binding ExportCsvCommand}" />
+
+                        <Button Grid.Column="2"
+                                Style="{StaticResource ButtonBase}"
+                                Background="#455A64" Foreground="White"
+                                Content="📋 EXPORT JSON"
+                                Command="{Binding ExportJsonCommand}" />
                     </Grid>
 
                     <!-- Stats -->

@@ -150,6 +150,9 @@ func (p *Pool) doRequest(ctx context.Context) {
 	resp.Body.Close()
 
 	success := resp.StatusCode >= 200 && resp.StatusCode < 400
+	if reqCfg.ExpectedStatus > 0 {
+		success = resp.StatusCode == reqCfg.ExpectedStatus
+	}
 
 	p.resultCh <- metrics.RequestResult{
 		Duration:      duration,

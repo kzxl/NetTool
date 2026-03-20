@@ -7,6 +7,7 @@ using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using Microsoft.Win32;
 using NetTool.UI.Models;
 using NetTool.UI.Services;
 using SkiaSharp;
@@ -17,6 +18,7 @@ namespace NetTool.UI.ViewModels
     {
         private readonly EngineRunner _engine = new();
         private readonly Dispatcher _dispatcher;
+        private readonly List<MetricsData> _metricsHistory = new();
 
         // Config properties
         private string _url = "https://httpbin.org/get";
@@ -27,6 +29,13 @@ namespace NetTool.UI.ViewModels
         private int _durationSec = 30;
         private int _rampUpSec = 5;
         private int _timeoutMs = 5000;
+        private int _expectedStatus;
+
+        // Alert thresholds
+        private int _p95Threshold = 0;
+        private int _p99Threshold = 0;
+        private bool _isAlerted;
+        private string _alertMessage = "";
 
         // State
         private bool _isRunning;
@@ -34,6 +43,18 @@ namespace NetTool.UI.ViewModels
         private int _totalRequests;
         private int _totalErrors;
         private long _totalBytes;
+
+        // Summary
+        private bool _showSummary;
+        private string _summaryOverallAvg = "-";
+        private string _summaryOverallMin = "-";
+        private string _summaryOverallMax = "-";
+        private string _summaryOverallP95 = "-";
+        private string _summaryOverallP99 = "-";
+        private string _summaryAvgRps = "-";
+        private string _summaryErrRate = "-";
+        private string _summaryThroughput = "-";
+        private string _summaryDuration = "-";
 
         // Chart data
         private readonly ObservableCollection<ObservableValue> _rpsValues = new();
@@ -50,6 +71,10 @@ namespace NetTool.UI.ViewModels
 
             StartCommand = new RelayCommand(Start, () => !IsRunning);
             StopCommand = new RelayCommand(Stop, () => IsRunning);
+            ExportCsvCommand = new RelayCommand(ExportCsv, () => _metricsHistory.Count > 0);
+            ExportJsonCommand = new RelayCommand(ExportJson, () => _metricsHistory.Count > 0);
+            SaveTemplateCommand = new RelayCommand(SaveTemplate);
+            LoadTemplateCommand = new RelayCommand(LoadTemplate);
 
             _engine.OnStdOutReceived += OnEngineStdOut;
             _engine.OnStdErrReceived += OnEngineStdErr;
@@ -68,6 +93,11 @@ namespace NetTool.UI.ViewModels
         public int DurationSec { get => _durationSec; set => SetProperty(ref _durationSec, value); }
         public int RampUpSec { get => _rampUpSec; set => SetProperty(ref _rampUpSec, value); }
         public int TimeoutMs { get => _timeoutMs; set => SetProperty(ref _timeoutMs, value); }
+        public int ExpectedStatus { get => _expectedStatus; set => SetProperty(ref _expectedStatus, value); }
+
+        // Alert thresholds
+        public int P95Threshold { get => _p95Threshold; set => SetProperty(ref _p95Threshold, value); }
+        public int P99Threshold { get => _p99Threshold; set => SetProperty(ref _p99Threshold, value); }
 
         #endregion
 
@@ -94,12 +124,31 @@ namespace NetTool.UI.ViewModels
         public int TotalErrors { get => _totalErrors; set => SetProperty(ref _totalErrors, value); }
         public long TotalBytes { get => _totalBytes; set => SetProperty(ref _totalBytes, value); }
 
+        public bool IsAlerted { get => _isAlerted; set => SetProperty(ref _isAlerted, value); }
+        public string AlertMessage { get => _alertMessage; set => SetProperty(ref _alertMessage, value); }
+
+        // Summary
+        public bool ShowSummary { get => _showSummary; set => SetProperty(ref _showSummary, value); }
+        public string SummaryOverallAvg { get => _summaryOverallAvg; set => SetProperty(ref _summaryOverallAvg, value); }
+        public string SummaryOverallMin { get => _summaryOverallMin; set => SetProperty(ref _summaryOverallMin, value); }
+        public string SummaryOverallMax { get => _summaryOverallMax; set => SetProperty(ref _summaryOverallMax, value); }
+        public string SummaryOverallP95 { get => _summaryOverallP95; set => SetProperty(ref _summaryOverallP95, value); }
+        public string SummaryOverallP99 { get => _summaryOverallP99; set => SetProperty(ref _summaryOverallP99, value); }
+        public string SummaryAvgRps { get => _summaryAvgRps; set => SetProperty(ref _summaryAvgRps, value); }
+        public string SummaryErrRate { get => _summaryErrRate; set => SetProperty(ref _summaryErrRate, value); }
+        public string SummaryThroughput { get => _summaryThroughput; set => SetProperty(ref _summaryThroughput, value); }
+        public string SummaryDuration { get => _summaryDuration; set => SetProperty(ref _summaryDuration, value); }
+
         #endregion
 
         #region Commands
 
         public RelayCommand StartCommand { get; }
         public RelayCommand StopCommand { get; }
+        public RelayCommand ExportCsvCommand { get; }
+        public RelayCommand ExportJsonCommand { get; }
+        public RelayCommand SaveTemplateCommand { get; }
+        public RelayCommand LoadTemplateCommand { get; }
 
         #endregion
 
@@ -168,14 +217,12 @@ namespace NetTool.UI.ViewModels
 
             try
             {
-                // Validate URL
                 if (string.IsNullOrWhiteSpace(Url))
                 {
                     StatusText = "Error: URL is required";
                     return;
                 }
 
-                // Build config
                 var config = new TestConfig
                 {
                     Request = new RequestConfig
@@ -183,6 +230,7 @@ namespace NetTool.UI.ViewModels
                         Url = Url.Trim(),
                         Method = Method,
                         Body = Body,
+                        ExpectedStatus = ExpectedStatus,
                     },
                     Load = new LoadConfig
                     {
@@ -193,7 +241,6 @@ namespace NetTool.UI.ViewModels
                     TimeoutMs = TimeoutMs,
                 };
 
-                // Parse headers
                 if (!string.IsNullOrWhiteSpace(Headers) && Headers.Trim() != "{}")
                 {
                     try
@@ -213,16 +260,18 @@ namespace NetTool.UI.ViewModels
                 _p95Values.Clear();
                 _p99Values.Clear();
                 _logLines.Clear();
+                _metricsHistory.Clear();
                 TotalRequests = 0;
                 TotalErrors = 0;
                 TotalBytes = 0;
+                ShowSummary = false;
+                IsAlerted = false;
+                AlertMessage = "";
 
-                // Write config to temp file
                 var configPath = Path.Combine(Path.GetTempPath(), $"nettool_config_{Guid.NewGuid():N}.json");
                 var jsonOptions = new JsonSerializerOptions { WriteIndented = false };
                 File.WriteAllText(configPath, JsonSerializer.Serialize(config, jsonOptions));
 
-                // Find engine.exe
                 var enginePath = FindEnginePath();
                 if (enginePath == null)
                 {
@@ -232,6 +281,9 @@ namespace NetTool.UI.ViewModels
 
                 AddLog($"Starting test: {Method} {Url}");
                 AddLog($"Concurrency: {Concurrency}, Duration: {DurationSec}s, Ramp-up: {RampUpSec}s");
+                if (ExpectedStatus > 0) AddLog($"Expected status: {ExpectedStatus}");
+                if (P95Threshold > 0) AddLog($"Alert threshold — p95: {P95Threshold}ms");
+                if (P99Threshold > 0) AddLog($"Alert threshold — p99: {P99Threshold}ms");
 
                 _engine.Start(enginePath, configPath);
                 IsRunning = true;
@@ -261,6 +313,123 @@ namespace NetTool.UI.ViewModels
             finally
             {
                 IsRunning = false;
+                ComputeSummary();
+                RaiseExportCanExecute();
+            }
+        }
+
+        private void ExportCsv()
+        {
+            var dlg = new SaveFileDialog
+            {
+                Title = "Export CSV",
+                Filter = "CSV files (*.csv)|*.csv",
+                FileName = $"nettool_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    ExportService.ExportCsv(_metricsHistory, dlg.FileName);
+                    AddLog($"Exported CSV: {dlg.FileName}");
+                    StatusText = $"Exported to {Path.GetFileName(dlg.FileName)}";
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"Export error: {ex.Message}");
+                }
+            }
+        }
+
+        private void ExportJson()
+        {
+            var dlg = new SaveFileDialog
+            {
+                Title = "Export JSON",
+                Filter = "JSON files (*.json)|*.json",
+                FileName = $"nettool_{DateTime.Now:yyyyMMdd_HHmmss}.json",
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    ExportService.ExportJson(_metricsHistory, dlg.FileName);
+                    AddLog($"Exported JSON: {dlg.FileName}");
+                    StatusText = $"Exported to {Path.GetFileName(dlg.FileName)}";
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"Export error: {ex.Message}");
+                }
+            }
+        }
+
+        private void SaveTemplate()
+        {
+            var dlg = new SaveFileDialog
+            {
+                Title = "Save Template",
+                Filter = "JSON files (*.json)|*.json",
+                InitialDirectory = TemplateService.GetTemplateDirectory(),
+                FileName = "my_template.json",
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    var config = BuildCurrentConfig();
+                    TemplateService.Save(config, dlg.FileName);
+                    AddLog($"Template saved: {Path.GetFileName(dlg.FileName)}");
+                    StatusText = $"Template saved";
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"Save template error: {ex.Message}");
+                }
+            }
+        }
+
+        private void LoadTemplate()
+        {
+            var dlg = new OpenFileDialog
+            {
+                Title = "Load Template",
+                Filter = "JSON files (*.json)|*.json",
+                InitialDirectory = TemplateService.GetTemplateDirectory(),
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    var config = TemplateService.Load(dlg.FileName);
+                    if (config == null)
+                    {
+                        StatusText = "Error: Could not load template";
+                        return;
+                    }
+
+                    // Apply to UI
+                    Url = config.Request.Url;
+                    Method = config.Request.Method;
+                    Body = config.Request.Body;
+                    ExpectedStatus = config.Request.ExpectedStatus;
+                    Concurrency = config.Load.Concurrency;
+                    DurationSec = config.Load.DurationSec;
+                    RampUpSec = config.Load.RampUpSec;
+                    TimeoutMs = config.TimeoutMs;
+
+                    if (config.Request.Headers.Count > 0)
+                        Headers = JsonSerializer.Serialize(config.Request.Headers);
+                    else
+                        Headers = "{}";
+
+                    AddLog($"Template loaded: {Path.GetFileName(dlg.FileName)}");
+                    StatusText = $"Template loaded: {Path.GetFileName(dlg.FileName)}";
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"Load template error: {ex.Message}");
+                }
             }
         }
 
@@ -275,6 +444,8 @@ namespace NetTool.UI.ViewModels
                 var metrics = MetricsParser.Parse(line);
                 if (metrics != null)
                 {
+                    _metricsHistory.Add(metrics);
+
                     _rpsValues.Add(new ObservableValue(metrics.Rps));
                     _avgValues.Add(new ObservableValue(metrics.Avg));
                     _p95Values.Add(new ObservableValue(metrics.P95));
@@ -283,6 +454,9 @@ namespace NetTool.UI.ViewModels
                     TotalRequests += metrics.Total;
                     TotalErrors += metrics.Fail;
                     TotalBytes += metrics.BytesReceived;
+
+                    // Check alert thresholds
+                    CheckAlerts(metrics);
 
                     var bytesStr = FormatBytes(TotalBytes);
                     StatusText = $"Running... | RPS: {metrics.Rps} | Avg: {metrics.Avg:F0}ms | Min: {metrics.Min:F0}ms | Max: {metrics.Max:F0}ms | p95: {metrics.P95:F0}ms | Conns: {metrics.ActiveConnections} | {bytesStr}";
@@ -307,6 +481,8 @@ namespace NetTool.UI.ViewModels
                 IsRunning = false;
                 StatusText = exitCode == 0 ? "Completed" : $"Exited with code {exitCode}";
                 AddLog($"Engine exited (code: {exitCode})");
+                ComputeSummary();
+                RaiseExportCanExecute();
             });
         }
 
@@ -314,15 +490,106 @@ namespace NetTool.UI.ViewModels
 
         #region Helpers
 
+        private TestConfig BuildCurrentConfig()
+        {
+            var config = new TestConfig
+            {
+                Request = new RequestConfig
+                {
+                    Url = Url.Trim(),
+                    Method = Method,
+                    Body = Body,
+                    ExpectedStatus = ExpectedStatus,
+                },
+                Load = new LoadConfig
+                {
+                    Concurrency = Concurrency,
+                    DurationSec = DurationSec,
+                    RampUpSec = RampUpSec,
+                },
+                TimeoutMs = TimeoutMs,
+            };
+
+            if (!string.IsNullOrWhiteSpace(Headers) && Headers.Trim() != "{}")
+            {
+                try { config.Request.Headers = JsonSerializer.Deserialize<Dictionary<string, string>>(Headers) ?? new(); }
+                catch { /* ignore */ }
+            }
+
+            return config;
+        }
+
+        private void CheckAlerts(MetricsData metrics)
+        {
+            var alerts = new List<string>();
+
+            if (P95Threshold > 0 && metrics.P95 > P95Threshold)
+                alerts.Add($"p95 ({metrics.P95:F0}ms) > {P95Threshold}ms");
+
+            if (P99Threshold > 0 && metrics.P99 > P99Threshold)
+                alerts.Add($"p99 ({metrics.P99:F0}ms) > {P99Threshold}ms");
+
+            if (alerts.Count > 0)
+            {
+                IsAlerted = true;
+                AlertMessage = "⚠ " + string.Join(" | ", alerts);
+            }
+            else
+            {
+                IsAlerted = false;
+                AlertMessage = "";
+            }
+        }
+
+        private void ComputeSummary()
+        {
+            if (_metricsHistory.Count == 0)
+            {
+                ShowSummary = false;
+                return;
+            }
+
+            var totalReqs = _metricsHistory.Sum(m => m.Total);
+            var totalFails = _metricsHistory.Sum(m => m.Fail);
+            var duration = _metricsHistory.Count;
+
+            // Weighted average latency
+            var weightedSum = _metricsHistory.Sum(m => m.Avg * m.Total);
+            var overallAvg = totalReqs > 0 ? weightedSum / totalReqs : 0;
+
+            var overallMin = _metricsHistory.Min(m => m.Min);
+            var overallMax = _metricsHistory.Max(m => m.Max);
+            var overallP95 = _metricsHistory.Max(m => m.P95);
+            var overallP99 = _metricsHistory.Max(m => m.P99);
+            var avgRps = totalReqs / (double)Math.Max(duration, 1);
+            var errRate = totalReqs > 0 ? (double)totalFails / totalReqs : 0;
+
+            SummaryOverallAvg = $"{overallAvg:F1} ms";
+            SummaryOverallMin = $"{overallMin:F1} ms";
+            SummaryOverallMax = $"{overallMax:F1} ms";
+            SummaryOverallP95 = $"{overallP95:F1} ms";
+            SummaryOverallP99 = $"{overallP99:F1} ms";
+            SummaryAvgRps = $"{avgRps:F1}";
+            SummaryErrRate = $"{errRate:P2}";
+            SummaryThroughput = FormatBytes(TotalBytes);
+            SummaryDuration = $"{duration}s";
+
+            ShowSummary = true;
+        }
+
+        private void RaiseExportCanExecute()
+        {
+            ExportCsvCommand.RaiseCanExecuteChanged();
+            ExportJsonCommand.RaiseCanExecuteChanged();
+        }
+
         private string? FindEnginePath()
         {
-            // Look for engine.exe relative to the app
             var candidates = new[]
             {
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "engine.exe"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "engine.exe"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "engine", "engine.exe"),
-                // Also check the solution root
                 Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "engine.exe")),
             };
 
@@ -341,7 +608,6 @@ namespace NetTool.UI.ViewModels
             var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
             _logLines.Add($"[{timestamp}] {message}");
 
-            // Keep max 500 lines to avoid memory issues
             while (_logLines.Count > 500)
                 _logLines.RemoveAt(0);
         }

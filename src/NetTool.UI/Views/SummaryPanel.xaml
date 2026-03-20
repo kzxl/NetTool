@@ -1,0 +1,64 @@
+<UserControl x:Class="NetTool.UI.Views.SummaryPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Visibility="{Binding ShowSummary, Converter={StaticResource BoolToVis}}">
+
+    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,0">
+        <StackPanel>
+            <TextBlock Style="{StaticResource SectionTitle}" Text="📊 TEST SUMMARY" />
+
+            <UniformGrid Columns="3" Rows="3" Margin="0,4,0,0">
+                <!-- Row 1 -->
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="AVG LATENCY" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryOverallAvg}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentGreenBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="MIN" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryOverallMin}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="MAX" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryOverallMax}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentOrangeBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Row 2 -->
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="P95" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryOverallP95}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentOrangeBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="P99" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryOverallP99}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="AVG RPS" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryAvgRps}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Row 3 -->
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="ERROR RATE" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryErrRate}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="THROUGHPUT" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryThroughput}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Margin="4">
+                    <TextBlock Text="DURATION" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                    <TextBlock Text="{Binding SummaryDuration}" FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </UniformGrid>
+        </StackPanel>
+    </Border>
+</UserControl>

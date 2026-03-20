@@ -15,10 +15,11 @@ type Config struct {
 
 // RequestConfig holds HTTP request parameters.
 type RequestConfig struct {
-	URL     string            `json:"url"`
-	Method  string            `json:"method"`
-	Headers map[string]string `json:"headers"`
-	Body    string            `json:"body"`
+	URL            string            `json:"url"`
+	Method         string            `json:"method"`
+	Headers        map[string]string `json:"headers"`
+	Body           string            `json:"body"`
+	ExpectedStatus int               `json:"expectedStatus"`
 }
 
 // LoadConfig holds load test parameters.

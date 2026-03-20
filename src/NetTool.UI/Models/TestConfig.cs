@@ -27,6 +27,9 @@ namespace NetTool.UI.Models
 
         [JsonPropertyName("body")]
         public string Body { get; set; } = "";
+
+        [JsonPropertyName("expectedStatus")]
+        public int ExpectedStatus { get; set; }
     }
 
     public class LoadConfig
