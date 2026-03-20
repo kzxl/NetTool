@@ -33,6 +33,7 @@ namespace NetTool.UI.ViewModels
         private string _statusText = "Ready";
         private int _totalRequests;
         private int _totalErrors;
+        private long _totalBytes;
 
         // Chart data
         private readonly ObservableCollection<ObservableValue> _rpsValues = new();
@@ -91,6 +92,7 @@ namespace NetTool.UI.ViewModels
         public string StatusText { get => _statusText; set => SetProperty(ref _statusText, value); }
         public int TotalRequests { get => _totalRequests; set => SetProperty(ref _totalRequests, value); }
         public int TotalErrors { get => _totalErrors; set => SetProperty(ref _totalErrors, value); }
+        public long TotalBytes { get => _totalBytes; set => SetProperty(ref _totalBytes, value); }
 
         #endregion
 
@@ -213,6 +215,7 @@ namespace NetTool.UI.ViewModels
                 _logLines.Clear();
                 TotalRequests = 0;
                 TotalErrors = 0;
+                TotalBytes = 0;
 
                 // Write config to temp file
                 var configPath = Path.Combine(Path.GetTempPath(), $"nettool_config_{Guid.NewGuid():N}.json");
@@ -279,8 +282,10 @@ namespace NetTool.UI.ViewModels
 
                     TotalRequests += metrics.Total;
                     TotalErrors += metrics.Fail;
+                    TotalBytes += metrics.BytesReceived;
 
-                    StatusText = $"Running... | RPS: {metrics.Rps} | Avg: {metrics.Avg:F0}ms | p95: {metrics.P95:F0}ms | Err: {metrics.ErrorRate:P1}";
+                    var bytesStr = FormatBytes(TotalBytes);
+                    StatusText = $"Running... | RPS: {metrics.Rps} | Avg: {metrics.Avg:F0}ms | Min: {metrics.Min:F0}ms | Max: {metrics.Max:F0}ms | p95: {metrics.P95:F0}ms | Conns: {metrics.ActiveConnections} | {bytesStr}";
                 }
 
                 AddLog(line);
@@ -339,6 +344,14 @@ namespace NetTool.UI.ViewModels
             // Keep max 500 lines to avoid memory issues
             while (_logLines.Count > 500)
                 _logLines.RemoveAt(0);
+        }
+
+        private static string FormatBytes(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+            if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024):F1} MB";
+            return $"{bytes / (1024.0 * 1024 * 1024):F2} GB";
         }
 
         public void Dispose()

@@ -13,13 +13,14 @@ import (
 
 // Pool manages a pool of workers that send HTTP requests.
 type Pool struct {
-	cfg      *config.Config
-	client   *http.Client
-	resultCh chan<- metrics.RequestResult
+	cfg       *config.Config
+	client    *http.Client
+	resultCh  chan<- metrics.RequestResult
+	collector *metrics.Collector
 }
 
 // NewPool creates a new worker pool.
-func NewPool(cfg *config.Config, resultCh chan<- metrics.RequestResult) *Pool {
+func NewPool(cfg *config.Config, collector *metrics.Collector) *Pool {
 	transport := &http.Transport{
 		MaxIdleConns:        cfg.Load.Concurrency + 50,
 		MaxIdleConnsPerHost: cfg.Load.Concurrency + 50,
@@ -33,9 +34,10 @@ func NewPool(cfg *config.Config, resultCh chan<- metrics.RequestResult) *Pool {
 	}
 
 	return &Pool{
-		cfg:      cfg,
-		client:   client,
-		resultCh: resultCh,
+		cfg:       cfg,
+		client:    client,
+		resultCh:  collector.ResultChan(),
+		collector: collector,
 	}
 }
 
@@ -46,13 +48,11 @@ func (p *Pool) Run(ctx context.Context) {
 	rampUpSec := p.cfg.Load.RampUpSec
 	durationSec := p.cfg.Load.DurationSec
 
-	// Create a context with the total duration timeout
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(durationSec)*time.Second)
 	defer cancel()
 
 	sem := make(chan struct{}, concurrency)
 
-	// Calculate ramp-up: gradually increase workers
 	rampInterval := time.Duration(0)
 	if rampUpSec > 0 && concurrency > 1 {
 		rampInterval = time.Duration(rampUpSec) * time.Second / time.Duration(concurrency)
@@ -62,7 +62,6 @@ func (p *Pool) Run(ctx context.Context) {
 	rampTicker := time.NewTicker(max(rampInterval, 1*time.Millisecond))
 	defer rampTicker.Stop()
 
-	// Ramp-up goroutine
 	if rampUpSec > 0 && concurrency > 1 {
 		go func() {
 			for {
@@ -82,19 +81,15 @@ func (p *Pool) Run(ctx context.Context) {
 		currentMax = concurrency
 	}
 
-	// Main request loop
 	for {
 		select {
 		case <-ctx.Done():
-			// Wait for in-flight requests to finish
 			for i := 0; i < cap(sem); i++ {
 				sem <- struct{}{}
 			}
 			return
 		default:
-			// Check ramp-up limit: only allow up to currentMax concurrent
 			if len(sem) >= currentMax {
-				// Wait a bit before retrying
 				time.Sleep(1 * time.Millisecond)
 				continue
 			}
@@ -109,6 +104,10 @@ func (p *Pool) Run(ctx context.Context) {
 }
 
 func (p *Pool) doRequest(ctx context.Context) {
+	// Track active connections
+	p.collector.IncrConns()
+	defer p.collector.DecrConns()
+
 	reqCfg := p.cfg.Request
 
 	var body io.Reader
@@ -135,7 +134,6 @@ func (p *Pool) doRequest(ctx context.Context) {
 	duration := time.Since(start)
 
 	if err != nil {
-		// Don't report context cancelled errors during shutdown
 		if ctx.Err() != nil {
 			return
 		}
@@ -147,15 +145,17 @@ func (p *Pool) doRequest(ctx context.Context) {
 		return
 	}
 
-	// Drain and close body to allow connection reuse
-	io.Copy(io.Discard, resp.Body)
+	// Read and count response bytes
+	bytesRead, _ := io.Copy(io.Discard, resp.Body)
 	resp.Body.Close()
 
 	success := resp.StatusCode >= 200 && resp.StatusCode < 400
 
 	p.resultCh <- metrics.RequestResult{
-		Duration: duration,
-		Success:  success,
+		Duration:      duration,
+		StatusCode:    resp.StatusCode,
+		BytesReceived: bytesRead,
+		Success:       success,
 	}
 }
 

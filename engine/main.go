@@ -70,7 +70,7 @@ func main() {
 	}()
 
 	// Run worker pool (blocks until done or cancelled)
-	pool := worker.NewPool(cfg, collector.ResultChan())
+	pool := worker.NewPool(cfg, collector)
 	pool.Run(ctx)
 
 	// Stop collector and wait for final snapshot

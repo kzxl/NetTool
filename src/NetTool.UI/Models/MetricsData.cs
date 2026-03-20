@@ -13,6 +13,15 @@ namespace NetTool.UI.Models
         [JsonPropertyName("avg")]
         public double Avg { get; set; }
 
+        [JsonPropertyName("min")]
+        public double Min { get; set; }
+
+        [JsonPropertyName("max")]
+        public double Max { get; set; }
+
+        [JsonPropertyName("stddev")]
+        public double StdDev { get; set; }
+
         [JsonPropertyName("p50")]
         public double P50 { get; set; }
 
@@ -33,5 +42,29 @@ namespace NetTool.UI.Models
 
         [JsonPropertyName("fail")]
         public int Fail { get; set; }
+
+        [JsonPropertyName("codes")]
+        public StatusCodeDist? StatusCodes { get; set; }
+
+        [JsonPropertyName("bytes")]
+        public long BytesReceived { get; set; }
+
+        [JsonPropertyName("conns")]
+        public long ActiveConnections { get; set; }
+    }
+
+    public class StatusCodeDist
+    {
+        [JsonPropertyName("2xx")]
+        public int S2xx { get; set; }
+
+        [JsonPropertyName("3xx")]
+        public int S3xx { get; set; }
+
+        [JsonPropertyName("4xx")]
+        public int S4xx { get; set; }
+
+        [JsonPropertyName("5xx")]
+        public int S5xx { get; set; }
     }
 }
