@@ -43,9 +43,17 @@ func main() {
 		runLoadTest(configPath)
 	case "ping":
 		runPing(configPath)
+	case "dns":
+		runDNS(configPath)
+	case "portscan":
+		runPortScan(configPath)
+	case "ipscan":
+		runIPScan(configPath)
+	case "httpheaders":
+		runHTTPHeaders(configPath)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		fmt.Fprintf(os.Stderr, "Available commands: loadtest, ping\n")
+		fmt.Fprintf(os.Stderr, "Available commands: loadtest, ping, dns, portscan, ipscan, httpheaders\n")
 		os.Exit(1)
 	}
 }

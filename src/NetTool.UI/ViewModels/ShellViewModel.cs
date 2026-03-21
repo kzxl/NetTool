@@ -1,7 +1,11 @@
 using System.Collections.ObjectModel;
 using NetTool.UI.Core;
+using NetTool.UI.Modules.DnsLookup;
+using NetTool.UI.Modules.HttpHeaders;
+using NetTool.UI.Modules.IPScan;
 using NetTool.UI.Modules.LoadTest;
 using NetTool.UI.Modules.Ping;
+using NetTool.UI.Modules.PortScan;
 using NetTool.UI.ViewModels;
 
 namespace NetTool.UI.ViewModels
@@ -19,6 +23,10 @@ namespace NetTool.UI.ViewModels
             // Register modules — thêm module mới chỉ cần 1 dòng ở đây
             ToolRegistry.Register(new LoadTestTool());
             ToolRegistry.Register(new PingTool());
+            ToolRegistry.Register(new DnsTool());
+            ToolRegistry.Register(new PortScanTool());
+            ToolRegistry.Register(new IPScanTool());
+            ToolRegistry.Register(new HttpHeadersTool());
 
             Tools = new ObservableCollection<ITool>(ToolRegistry.Tools);
 

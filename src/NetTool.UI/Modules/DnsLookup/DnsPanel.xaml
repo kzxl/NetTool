@@ -1,0 +1,77 @@
+<UserControl x:Class="NetTool.UI.Modules.DnsLookup.DnsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT: Config -->
+        <StackPanel Grid.Column="0">
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="🔍 DNS CONFIG" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="HOST / DOMAIN" />
+                    <TextBox Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource StartButton}" Content="▶  LOOKUP" Command="{Binding StartCommand}" />
+                        <Button Grid.Column="2" Style="{StaticResource StopButton}" Content="■  STOP" Command="{Binding StopCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Log -->
+            <Border Style="{StaticResource CardBorder}" Height="300">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📋 LOG" />
+                    <ListBox Style="{StaticResource LogListBox}" ItemsSource="{Binding LogLines}"
+                             VirtualizingPanel.IsVirtualizing="True" BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" TextWrapping="NoWrap" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- RIGHT: Results Table -->
+        <Border Grid.Column="2" Style="{StaticResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📊 DNS RECORDS" />
+                <DataGrid ItemsSource="{Binding Records}" AutoGenerateColumns="False"
+                          IsReadOnly="True" HeadersVisibility="Column"
+                          Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}"
+                          BorderThickness="0" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{StaticResource BorderBrush}"
+                          RowBackground="Transparent" AlternatingRowBackground="#10FFFFFF"
+                          ColumnHeaderHeight="32" RowHeight="28" FontSize="12.5">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{StaticResource BgMediumBrush}" />
+                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                            <Setter Property="Padding" Value="12,6" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="FontSize" Value="11" />
+                            <Setter Property="BorderThickness" Value="0" />
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="TYPE" Binding="{Binding Type}" Width="80" />
+                        <DataGridTextColumn Header="VALUE" Binding="{Binding Value}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

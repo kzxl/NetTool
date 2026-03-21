@@ -1,0 +1,124 @@
+<UserControl x:Class="NetTool.UI.Modules.IPScan.IPScanPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT: Config -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="🌐 IP SCAN CONFIG" />
+
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="SUBNET (CIDR)" />
+                        <TextBox Text="{Binding Subnet, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="TIMEOUT (MS)" />
+                                <TextBox Text="{Binding TimeoutMs}" IsEnabled="{Binding IsNotRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="WORKERS" />
+                                <TextBox Text="{Binding Workers}" IsEnabled="{Binding IsNotRunning}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource StartButton}" Content="▶  SCAN" Command="{Binding StartCommand}" />
+                            <Button Grid.Column="2" Style="{StaticResource StopButton}" Content="■  STOP" Command="{Binding StopCommand}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Stats -->
+                <Border Style="{StaticResource CardBorder}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="SCANNED" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding ScannedCount}" FontSize="18" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="UP" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding UpCount}" FontSize="18" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentGreenBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="DOWN" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding DownCount}" FontSize="18" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Log -->
+                <Border Style="{StaticResource CardBorder}" Height="200">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📋 LOG" />
+                        <ListBox Style="{StaticResource LogListBox}" ItemsSource="{Binding LogLines}"
+                                 VirtualizingPanel.IsVirtualizing="True" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" TextWrapping="NoWrap" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- RIGHT: Live Hosts Table -->
+        <Border Grid.Column="2" Style="{StaticResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="🟢 LIVE HOSTS" />
+                <DataGrid ItemsSource="{Binding Results}" AutoGenerateColumns="False"
+                          IsReadOnly="True" HeadersVisibility="Column"
+                          Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}"
+                          BorderThickness="0" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{StaticResource BorderBrush}"
+                          RowBackground="Transparent" AlternatingRowBackground="#10FFFFFF"
+                          ColumnHeaderHeight="32" RowHeight="28" FontSize="12.5">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{StaticResource BgMediumBrush}" />
+                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                            <Setter Property="Padding" Value="12,6" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="FontSize" Value="11" />
+                            <Setter Property="BorderThickness" Value="0" />
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="IP" Binding="{Binding IP}" Width="140" />
+                        <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="80" />
+                        <DataGridTextColumn Header="LATENCY" Binding="{Binding Latency}" Width="100" />
+                        <DataGridTextColumn Header="HOSTNAME" Binding="{Binding Hostname}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>
