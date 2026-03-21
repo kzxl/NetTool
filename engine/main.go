@@ -51,9 +51,19 @@ func main() {
 		runIPScan(configPath)
 	case "httpheaders":
 		runHTTPHeaders(configPath)
+	case "traceroute":
+		runTraceroute(configPath)
+	case "ssl":
+		runSSL(configPath)
+	case "geoip":
+		runGeoIP(configPath)
+	case "whois":
+		runWhois(configPath)
+	case "websocket":
+		runWebSocket(configPath)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		fmt.Fprintf(os.Stderr, "Available commands: loadtest, ping, dns, portscan, ipscan, httpheaders\n")
+		fmt.Fprintf(os.Stderr, "Available commands: loadtest, ping, dns, portscan, ipscan, httpheaders, traceroute, ssl, geoip, whois, websocket\n")
 		os.Exit(1)
 	}
 }

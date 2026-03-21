@@ -10,6 +10,7 @@ namespace NetTool.UI.Modules.DnsLookup
         public string Name => "DNS Lookup";
         public string Icon => "🔍";
         public string Description => "DNS record lookup (A, AAAA, MX, NS, TXT, CNAME)";
+        public string Group => "Discovery";
         public int Order => 20;
 
         public ToolViewModelBase ViewModel => _viewModel ??= new DnsViewModel();

@@ -1,18 +1,21 @@
 using System.Collections.ObjectModel;
 using NetTool.UI.Core;
 using NetTool.UI.Modules.DnsLookup;
+using NetTool.UI.Modules.GeoIP;
 using NetTool.UI.Modules.HttpHeaders;
 using NetTool.UI.Modules.IPScan;
 using NetTool.UI.Modules.LoadTest;
 using NetTool.UI.Modules.Ping;
 using NetTool.UI.Modules.PortScan;
-using NetTool.UI.ViewModels;
+using NetTool.UI.Modules.SSLChecker;
+using NetTool.UI.Modules.Traceroute;
+using NetTool.UI.Modules.WebSocket;
+using NetTool.UI.Modules.Whois;
 
 namespace NetTool.UI.ViewModels
 {
     /// <summary>
     /// Shell ViewModel — orchestrate tools từ ToolRegistry.
-    /// MainWindow bind tới ViewModel này.
     /// </summary>
     public class ShellViewModel : ViewModelBase
     {
@@ -20,13 +23,22 @@ namespace NetTool.UI.ViewModels
 
         public ShellViewModel()
         {
-            // Register modules — thêm module mới chỉ cần 1 dòng ở đây
+            // ── Web ─────────────────────────────────
             ToolRegistry.Register(new LoadTestTool());
+            ToolRegistry.Register(new HttpHeadersTool());
+            ToolRegistry.Register(new SSLTool());
+            ToolRegistry.Register(new WebSocketTool());
+
+            // ── Network ─────────────────────────────
             ToolRegistry.Register(new PingTool());
+            ToolRegistry.Register(new TracerouteTool());
+
+            // ── Discovery ───────────────────────────
             ToolRegistry.Register(new DnsTool());
             ToolRegistry.Register(new PortScanTool());
             ToolRegistry.Register(new IPScanTool());
-            ToolRegistry.Register(new HttpHeadersTool());
+            ToolRegistry.Register(new GeoIPTool());
+            ToolRegistry.Register(new WhoisTool());
 
             Tools = new ObservableCollection<ITool>(ToolRegistry.Tools);
 
@@ -34,17 +46,14 @@ namespace NetTool.UI.ViewModels
                 SelectedTool = Tools[0];
         }
 
-        /// <summary>Danh sách tools hiển thị</summary>
         public ObservableCollection<ITool> Tools { get; }
 
-        /// <summary>Tool đang active</summary>
         public ITool? SelectedTool
         {
             get => _selectedTool;
             set => SetProperty(ref _selectedTool, value);
         }
 
-        /// <summary>Status text từ active tool</summary>
         public string StatusText => SelectedTool?.ViewModel.StatusText ?? "Ready";
     }
 }

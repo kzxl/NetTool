@@ -10,6 +10,7 @@ namespace NetTool.UI.Modules.PortScan
         public string Name => "Port Scanner";
         public string Icon => "🔓";
         public string Description => "TCP port scanner with service detection";
+        public string Group => "Discovery";
         public int Order => 30;
 
         public ToolViewModelBase ViewModel => _viewModel ??= new PortScanViewModel();

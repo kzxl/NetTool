@@ -10,6 +10,7 @@ namespace NetTool.UI.Modules.HttpHeaders
         public string Name => "HTTP Headers";
         public string Icon => "📋";
         public string Description => "Inspect HTTP response headers & TLS info";
+        public string Group => "Web";
         public int Order => 50;
 
         public ToolViewModelBase ViewModel => _viewModel ??= new HttpHeadersViewModel();

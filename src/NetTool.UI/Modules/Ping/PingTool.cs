@@ -10,6 +10,7 @@ namespace NetTool.UI.Modules.Ping
         public string Name => "Ping";
         public string Icon => "📡";
         public string Description => "TCP ping with latency tracking";
+        public string Group => "Network";
         public int Order => 10;
 
         public ToolViewModelBase ViewModel => _viewModel ??= new PingViewModel();

@@ -10,6 +10,7 @@ namespace NetTool.UI.Modules.IPScan
         public string Name => "IP Scanner";
         public string Icon => "🌐";
         public string Description => "Scan subnet for live hosts";
+        public string Group => "Discovery";
         public int Order => 40;
 
         public ToolViewModelBase ViewModel => _viewModel ??= new IPScanViewModel();

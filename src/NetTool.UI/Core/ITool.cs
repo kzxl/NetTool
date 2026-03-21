@@ -17,6 +17,9 @@ namespace NetTool.UI.Core
         /// <summary>Mô tả ngắn</summary>
         string Description { get; }
 
+        /// <summary>Nhóm (vd: "Network", "Discovery", "Web")</summary>
+        string Group { get; }
+
         /// <summary>Thứ tự hiển thị trong TabControl (thấp = trước)</summary>
         int Order { get; }
 

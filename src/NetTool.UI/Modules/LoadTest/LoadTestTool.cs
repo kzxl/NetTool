@@ -9,7 +9,8 @@ namespace NetTool.UI.Modules.LoadTest
 
         public string Name => "API Load Test";
         public string Icon => "🚀";
-        public string Description => "HTTP API performance & stress testing";
+        public string Description => "HTTP load testing with latency tracking";
+        public string Group => "Web";
         public int Order => 0;
 
         public ToolViewModelBase ViewModel => _viewModel ??= new LoadTestViewModel();

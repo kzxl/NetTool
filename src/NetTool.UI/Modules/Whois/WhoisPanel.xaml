@@ -1,0 +1,38 @@
+<UserControl x:Class="NetTool.UI.Modules.Whois.WhoisPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="340" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0">
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="📝 WHOIS LOOKUP" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="DOMAIN" />
+                    <TextBox Text="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource StartButton}" Content="▶  LOOKUP" Command="{Binding StartCommand}" />
+                        <Button Grid.Column="2" Style="{StaticResource StopButton}" Content="■  STOP" Command="{Binding StopCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardBorder}" Height="300">
+                <DockPanel><TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📋 LOG" />
+                    <ListBox Style="{StaticResource LogListBox}" ItemsSource="{Binding LogLines}" VirtualizingPanel.IsVirtualizing="True" BorderThickness="0">
+                        <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="NoWrap" /></DataTemplate></ListBox.ItemTemplate></ListBox></DockPanel>
+            </Border>
+        </StackPanel>
+        <Border Grid.Column="2" Style="{StaticResource CardBorder}">
+            <DockPanel><TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📊 DOMAIN INFO" />
+                <DataGrid ItemsSource="{Binding Results}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                          Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" BorderThickness="0"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource BorderBrush}"
+                          RowBackground="Transparent" AlternatingRowBackground="#10FFFFFF" ColumnHeaderHeight="32" RowHeight="28" FontSize="12.5">
+                    <DataGrid.ColumnHeaderStyle><Style TargetType="DataGridColumnHeader"><Setter Property="Background" Value="{StaticResource BgMediumBrush}" /><Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" /><Setter Property="Padding" Value="12,6" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="FontSize" Value="11" /><Setter Property="BorderThickness" Value="0" /></Style></DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="FIELD" Binding="{Binding Key}" Width="160" />
+                        <DataGridTextColumn Header="VALUE" Binding="{Binding Value}" Width="*" />
+                    </DataGrid.Columns></DataGrid></DockPanel>
+        </Border>
+    </Grid>
+</UserControl>
