@@ -47,27 +47,11 @@
             </DockPanel>
         </Border>
 
-        <!-- Tab Control — Dynamic from ToolRegistry -->
-        <TabControl ItemsSource="{Binding Tools}"
-                    SelectedItem="{Binding SelectedTool}"
+        <!-- Tab Control — populated by code-behind from ToolRegistry -->
+        <TabControl x:Name="ToolTabs"
                     Background="Transparent"
                     BorderThickness="0"
-                    Margin="0">
-
-            <TabControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Margin="8,4">
-                        <Run Text="{Binding Icon, Mode=OneTime}" />
-                        <Run Text="{Binding Name, Mode=OneTime}" />
-                    </TextBlock>
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-
-            <TabControl.ContentTemplate>
-                <DataTemplate>
-                    <!-- Placeholder — actual content loaded via code-behind -->
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+                    Padding="0"
+                    Margin="0" />
     </DockPanel>
 </Window>
