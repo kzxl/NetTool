@@ -12,3 +12,4 @@ engine.exe
 # Temp
 *.tmp
 nettool_config_*.json
+publish/

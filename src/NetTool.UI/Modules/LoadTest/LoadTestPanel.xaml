@@ -1,0 +1,281 @@
+<UserControl x:Class="NetTool.UI.Modules.LoadTest.LoadTestPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT: Config Panel -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="0">
+
+                <!-- Template Buttons -->
+                <Border Style="{StaticResource CardBorder}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource ButtonBase}" Background="#37474F" Foreground="White"
+                                Content="📂  LOAD TEMPLATE" Command="{Binding LoadTemplateCommand}" />
+                        <Button Grid.Column="2" Style="{StaticResource ButtonBase}" Background="#37474F" Foreground="White"
+                                Content="💾  SAVE TEMPLATE" Command="{Binding SaveTemplateCommand}" />
+                    </Grid>
+                </Border>
+
+                <!-- Request Section -->
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="⚡ REQUEST" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="URL" />
+                        <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="80" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="METHOD" />
+                                <ComboBox ItemsSource="{Binding HttpMethods}" SelectedItem="{Binding Method}" IsEnabled="{Binding IsNotRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="STATUS" />
+                                <TextBox Text="{Binding ExpectedStatus, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}"
+                                         ToolTip="Expected HTTP status (0 = any 2xx-3xx)" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="HEADERS (JSON)" />
+                        <TextBox Text="{Binding Headers, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
+                                 MinHeight="50" MaxHeight="100" IsEnabled="{Binding IsNotRunning}" />
+
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="BODY" />
+                        <TextBox Text="{Binding Body, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
+                                 MinHeight="50" MaxHeight="120" IsEnabled="{Binding IsNotRunning}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Load Config -->
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="🔧 LOAD CONFIG" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Grid.Column="0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="CONCURRENCY" />
+                                <TextBox Text="{Binding Concurrency, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="DURATION (SEC)" />
+                                <TextBox Text="{Binding DurationSec, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="RAMP-UP (SEC)" />
+                                <TextBox Text="{Binding RampUpSec, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="2">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="TIMEOUT (MS)" />
+                                <TextBox Text="{Binding TimeoutMs, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Alert Thresholds -->
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="🔔 ALERT THRESHOLDS" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="P95 (MS)" />
+                                <TextBox Text="{Binding P95Threshold, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}"
+                                         ToolTip="Alert when p95 exceeds this (0 = off)" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="P99 (MS)" />
+                                <TextBox Text="{Binding P99Threshold, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsNotRunning}"
+                                         ToolTip="Alert when p99 exceeds this (0 = off)" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="{Binding AlertMessage}" Foreground="{StaticResource AccentOrangeBrush}"
+                                   FontWeight="Bold" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Visibility="{Binding IsAlerted, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Controls -->
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource StartButton}" Content="▶  START" Command="{Binding StartCommand}" />
+                            <Button Grid.Column="2" Style="{StaticResource StopButton}" Content="■  STOP" Command="{Binding StopCommand}" />
+                        </Grid>
+
+                        <!-- Export -->
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource ButtonBase}" Background="#455A64" Foreground="White"
+                                    Content="📊 EXPORT CSV" Command="{Binding ExportCsvCommand}" />
+                            <Button Grid.Column="2" Style="{StaticResource ButtonBase}" Background="#455A64" Foreground="White"
+                                    Content="📋 EXPORT JSON" Command="{Binding ExportJsonCommand}" />
+                        </Grid>
+
+                        <!-- Stats -->
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="TOTAL REQUESTS" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding TotalRequests}" FontSize="20" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="ERRORS" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding TotalErrors}" FontSize="20" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- RIGHT: Charts + Summary + Log -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="*" MinHeight="120" />
+            </Grid.RowDefinitions>
+
+            <!-- Charts -->
+            <Grid Grid.Row="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource CardBorder}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📈 REQUESTS PER SECOND" />
+                        <lvc:CartesianChart Series="{Binding RpsSeries}" AnimationsSpeed="00:00:00.200" ZoomMode="X" TooltipPosition="Top" />
+                    </DockPanel>
+                </Border>
+
+                <Border Grid.Row="2" Style="{StaticResource CardBorder}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="⏱ LATENCY (MS)" />
+                        <lvc:CartesianChart Series="{Binding LatencySeries}" AnimationsSpeed="00:00:00.200" ZoomMode="X" TooltipPosition="Top" />
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Summary -->
+            <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,12,0,0"
+                    Visibility="{Binding ShowSummary, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="📊 TEST SUMMARY" />
+                    <UniformGrid Columns="3" Rows="3" Margin="0,4,0,0">
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="AVG LATENCY" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryOverallAvg}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentGreenBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="MIN" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryOverallMin}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="MAX" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryOverallMax}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentOrangeBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="P95" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryOverallP95}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentOrangeBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="P99" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryOverallP99}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="AVG RPS" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryAvgRps}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="ERROR RATE" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryErrRate}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="THROUGHPUT" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryThroughput}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center" Margin="4">
+                            <TextBlock Text="DURATION" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" FontSize="10" />
+                            <TextBlock Text="{Binding SummaryDuration}" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Log -->
+            <Border Grid.Row="3" Style="{StaticResource CardBorder}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="📋 LOG OUTPUT" />
+                    <ListBox Style="{StaticResource LogListBox}" ItemsSource="{Binding LogLines}"
+                             VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" TextWrapping="NoWrap" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

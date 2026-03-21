@@ -29,9 +29,9 @@ namespace NetTool.UI.Services
         public bool IsRunning => _process != null && !_process.HasExited;
 
         /// <summary>
-        /// Start the Go engine with the given config file path.
+        /// Start the Go engine with the given command and config file path.
         /// </summary>
-        public void Start(string enginePath, string configPath)
+        public void Start(string enginePath, string command, string configPath)
         {
             if (IsRunning)
                 throw new InvalidOperationException("Engine is already running.");
@@ -42,7 +42,7 @@ namespace NetTool.UI.Services
             var psi = new ProcessStartInfo
             {
                 FileName = enginePath,
-                Arguments = $"\"{configPath}\"",
+                Arguments = $"{command} \"{configPath}\"",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
