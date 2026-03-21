@@ -20,14 +20,17 @@
                 BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="12,6">
-            <TextBlock Text="{Binding SelectedTool.ViewModel.StatusText}"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       FontSize="12" />
+            <DockPanel>
+                <Ellipse Width="6" Height="6" Fill="{StaticResource AccentGreenBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding SelectedTool.ViewModel.StatusText}"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="11.5" />
+            </DockPanel>
         </Border>
 
         <!-- Title Bar -->
         <Border DockPanel.Dock="Top"
-                Background="{StaticResource BgMediumBrush}"
+                Background="{StaticResource TitleBarGradient}"
                 BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="16,12">
@@ -35,10 +38,12 @@
                 <TextBlock Text="🌌 NetTool"
                            FontSize="20" FontWeight="Bold"
                            Foreground="{StaticResource AccentBlueBrush}" />
+                <TextBlock Text="·" FontSize="20" Margin="8,0"
+                           Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Bottom" />
                 <TextBlock Text="Network Testing Suite"
-                           FontSize="13" VerticalAlignment="Bottom"
+                           FontSize="12" VerticalAlignment="Bottom"
                            Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="10,0,0,2" />
+                           Margin="0,0,0,3" FontWeight="Normal" />
             </DockPanel>
         </Border>
 

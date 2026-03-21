@@ -22,9 +22,9 @@
                             <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Style="{StaticResource ButtonBase}" Background="#37474F" Foreground="White"
+                        <Button Grid.Column="0" Style="{StaticResource SecondaryButton}"
                                 Content="📂  LOAD TEMPLATE" Command="{Binding LoadTemplateCommand}" />
-                        <Button Grid.Column="2" Style="{StaticResource ButtonBase}" Background="#37474F" Foreground="White"
+                        <Button Grid.Column="2" Style="{StaticResource SecondaryButton}"
                                 Content="💾  SAVE TEMPLATE" Command="{Binding SaveTemplateCommand}" />
                     </Grid>
                 </Border>
@@ -144,9 +144,9 @@
                                 <ColumnDefinition Width="8" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Style="{StaticResource ButtonBase}" Background="#455A64" Foreground="White"
+                            <Button Grid.Column="0" Style="{StaticResource SecondaryButton}"
                                     Content="📊 EXPORT CSV" Command="{Binding ExportCsvCommand}" />
-                            <Button Grid.Column="2" Style="{StaticResource ButtonBase}" Background="#455A64" Foreground="White"
+                            <Button Grid.Column="2" Style="{StaticResource SecondaryButton}"
                                     Content="📋 EXPORT JSON" Command="{Binding ExportJsonCommand}" />
                         </Grid>
 
