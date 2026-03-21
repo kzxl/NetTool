@@ -41,9 +41,11 @@ func main() {
 	switch command {
 	case "loadtest":
 		runLoadTest(configPath)
+	case "ping":
+		runPing(configPath)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		fmt.Fprintf(os.Stderr, "Available commands: loadtest\n")
+		fmt.Fprintf(os.Stderr, "Available commands: loadtest, ping\n")
 		os.Exit(1)
 	}
 }
