@@ -47,11 +47,14 @@
             </DockPanel>
         </Border>
 
-        <!-- Tab Control — populated by code-behind from ToolRegistry -->
-        <TabControl x:Name="ToolTabs"
+        <!-- Outer TabControl = Group tabs (Web / Network / Discovery) -->
+        <TabControl x:Name="GroupTabs"
                     Background="Transparent"
                     BorderThickness="0"
                     Padding="0"
-                    Margin="0" />
+                    Margin="0"
+                    TabStripPlacement="Left">
+            <!-- Populated by code-behind -->
+        </TabControl>
     </DockPanel>
 </Window>

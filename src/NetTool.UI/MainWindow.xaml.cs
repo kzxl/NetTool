@@ -27,37 +27,45 @@ namespace NetTool.UI
         {
             if (DataContext is not ShellViewModel shell) return;
 
-            // Group tools by Group property
             var groups = shell.Tools
                 .GroupBy(t => t.Group)
                 .OrderBy(g => g.Min(t => t.Order));
 
+            bool first = true;
             foreach (var group in groups)
             {
                 var groupIcon = GroupIcons.GetValueOrDefault(group.Key, "📦");
 
-                // Group separator tab (disabled, acts as label)
-                var separatorHeader = new TextBlock
+                // === Outer tab header (group) ===
+                var outerHeader = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 8, 4, 8) };
+                outerHeader.Children.Add(new TextBlock
                 {
-                    Text = $"{groupIcon} {group.Key.ToUpper()}",
-                    FontSize = 10,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B949E")),
-                    Margin = new Thickness(4, 2, 4, 2),
-                };
-                var separatorTab = new TabItem
+                    Text = groupIcon,
+                    FontSize = 18,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 8, 0),
+                });
+                outerHeader.Children.Add(new TextBlock
                 {
-                    Header = separatorHeader,
-                    IsEnabled = false,
-                    Padding = new Thickness(8, 6, 8, 6),
-                    Visibility = Visibility.Visible,
-                };
-                ToolTabs.Items.Add(separatorTab);
+                    Text = group.Key.ToUpper(),
+                    FontSize = 12,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C9D1D9")),
+                    VerticalAlignment = VerticalAlignment.Center,
+                });
 
-                // Tool tabs in this group
+                // === Inner TabControl (tools in this group) ===
+                var innerTabs = new TabControl
+                {
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    Padding = new Thickness(0),
+                    Margin = new Thickness(0),
+                };
+
                 foreach (var tool in group.OrderBy(t => t.Order))
                 {
-                    var header = new TextBlock
+                    var toolHeader = new TextBlock
                     {
                         Text = $"{tool.Icon}  {tool.Name}",
                         Margin = new Thickness(4, 2, 4, 2),
@@ -65,19 +73,34 @@ namespace NetTool.UI
 
                     var tabItem = new TabItem
                     {
-                        Header = header,
+                        Header = toolHeader,
                         Content = tool.CreateView(),
                         Padding = new Thickness(12, 8, 12, 8),
                         Tag = tool,
                     };
 
-                    ToolTabs.Items.Add(tabItem);
+                    innerTabs.Items.Add(tabItem);
+                }
+
+                if (innerTabs.Items.Count > 0)
+                    innerTabs.SelectedIndex = 0;
+
+                // === Outer tab item ===
+                var outerTab = new TabItem
+                {
+                    Header = outerHeader,
+                    Content = innerTabs,
+                    Padding = new Thickness(8, 4, 8, 4),
+                };
+
+                GroupTabs.Items.Add(outerTab);
+
+                if (first)
+                {
+                    GroupTabs.SelectedItem = outerTab;
+                    first = false;
                 }
             }
-
-            // Select first real tool tab (skip separator)
-            if (ToolTabs.Items.Count > 1)
-                ToolTabs.SelectedIndex = 1;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
